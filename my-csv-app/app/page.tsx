@@ -1,10 +1,8 @@
 'use client'
 import React, { useState, ChangeEvent } from 'react';
 import * as XLSX from 'xlsx';
-const { write, utils, read } = XLSX;
 import { useDropzone } from 'react-dropzone';
 import Navbar from './components/navbar';
-
 
 const dropzoneStyle: React.CSSProperties = {
   border: '2px dashed #3498db',
@@ -67,11 +65,6 @@ export default function Home() {
   const [isHovered, setHovered] = useState<boolean>(false);
   const [selectedFormat, setSelectedFormat] = useState<'xlsx' | 'csv'>('xlsx');
 
-  const onDrop = async (acceptedFiles: File[]) => {
-    const uploadedFile = acceptedFiles[0];
-    setFile(uploadedFile);
-  };
-
   const handlePartsChange = (event: ChangeEvent<HTMLInputElement>) => {
     const newParts = parseInt(event.target.value, 10);
     setParts(newParts);
@@ -95,23 +88,18 @@ export default function Home() {
   };
 
   const handleDownload = () => {
-    if (!file) {
-      console.error("No file selected");
-      return;
-    }
+    if (!file) return;
 
     const fileReader = new FileReader();
     fileReader.onload = (e) => {
       try {
         const arrayBuffer = e.target?.result as ArrayBuffer;
 
-        // Updated block
         const data = XLSX.read(arrayBuffer, { type: 'array' });
         const sheetName = data.SheetNames[0];
         const worksheet: XLSX.Sheet = data.Sheets[sheetName];
 
-        const jsonData = utils.sheet_to_json<string[]>(worksheet, { header: 1 });
-        // End of updated block
+        const jsonData = XLSX.utils.sheet_to_json<string[]>(worksheet, { header: 1 });
 
         const nonEmptyRows = jsonData.filter((row) => row.some((cellValue) => typeof cellValue === 'string' && cellValue.trim() !== ''));
 
@@ -129,9 +117,9 @@ export default function Home() {
           slicedData.push(...nonEmptyRows.slice(startRow, endRow));
 
           if (slicedData.length > 0) {
-            const slicedWorkbook = utils.book_new();
-            const slicedWorksheet = utils.aoa_to_sheet(slicedData);
-            utils.book_append_sheet(slicedWorkbook, slicedWorksheet, 'Sheet 1');
+            const slicedWorkbook = XLSX.utils.book_new();
+            const slicedWorksheet = XLSX.utils.aoa_to_sheet(slicedData);
+            XLSX.utils.book_append_sheet(slicedWorkbook, slicedWorksheet, 'Sheet 1');
 
             let blob: Blob;
             let extension: string;
@@ -141,10 +129,10 @@ export default function Home() {
               blob = new Blob([XLSX.write(slicedWorkbook, { bookType: 'xlsx', type: 'array', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })]);
               extension = 'xlsx';
             } else if (selectedFormat === 'csv') {
-              blob = new Blob([utils.sheet_to_csv(slicedWorksheet)]);
+              blob = new Blob([XLSX.utils.sheet_to_csv(slicedWorksheet)]);
               extension = 'csv';
             } else {
-              console.error("Invalid file format selected");
+              console.error("Formato de arquivo inválido selecionado");
               return;
             }
 
@@ -159,26 +147,31 @@ export default function Home() {
           }
         }
       } catch (error) {
-        console.error("Error during file processing:", error);
+        console.error("Erro durante o processamento do arquivo:", error);
       }
     };
 
     fileReader.readAsArrayBuffer(file);
   };
 
-  const { getRootProps, getInputProps } = useDropzone({ onDrop });
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop: (acceptedFiles: File[]) => {
+      const uploadedFile = acceptedFiles[0];
+      setFile(uploadedFile);
+    },
+  });
 
   return (
     <>
-      <Navbar />
+    <Navbar />
       <div style={containerStyle}>
-        <h1 style={{ color: '#3498db', marginBottom: '20px', fontSize: '30px' }}>Manipulação de Arquivo Excel (XLS)</h1>
+        <h1 style={{ color: '#3498db', marginBottom: '20px', fontSize: '40px' }}>Manipulação de Arquivo Excel (XLS)</h1>
         <div {...getRootProps()} style={dropzoneStyle}>
           <input {...getInputProps()} />
           <p style={{ fontSize: '18px', color: 'black' }}>Arraste e solte o arquivo Excel (XLS) aqui ou clique para fazer o upload.</p>
         </div>
         <label style={{ fontSize: '18px', color: 'black' }}>
-          Partes para o seu arquivo:
+          Partes para o arquivo:
           <input type="number" value={parts} onChange={handlePartsChange} style={inputStyle} />
         </label>
         {Array.from({ length: parts }, (_, i) => (
@@ -192,13 +185,15 @@ export default function Home() {
             />
           </label>
         ))}
-        <label style={{ fontSize: '18px', color: 'black' }}>
-          Formato do Arquivo:
-          <select value={selectedFormat} onChange={(e) => setSelectedFormat(e.target.value as 'xlsx' | 'csv')} style={inputStyle}>
-            <option value="xlsx">XLSX</option>
-            <option value="csv">CSV</option>
-          </select>
-        </label>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '20px' }}>
+          <label style={{ fontSize: '18px', color: 'black' }}>
+            Formato de arquivo:
+            <select value={selectedFormat} onChange={(e) => setSelectedFormat(e.target.value as 'xlsx' | 'csv')} style={inputStyle}>
+              <option value="xlsx">XLSX</option>
+              <option value="csv">CSV</option>
+            </select>
+          </label>
+        </div>
         <button
           onClick={handleDownload}
           style={{ ...buttonStyle, ...(isHovered ? buttonHoverStyle : {}) }}
@@ -208,15 +203,8 @@ export default function Home() {
           Dividir e Baixar
         </button>
       </div>
-      <footer style={{
-        backgroundColor: 'transparent',
-        color: '#fff',
-        padding: '10px',
-        textAlign: 'center',
-        bottom: '0',
-        width: '100%',
-      }}>
-        <p style={{ margin: '0' }}>Development ❤️ by MarcosJr</p>
+      <footer style={footerStyle}>
+        <p>Development By MarcosJr</p>
       </footer>
     </>
   );
