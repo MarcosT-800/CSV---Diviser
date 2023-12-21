@@ -1,8 +1,10 @@
 'use client'
 import React, { useState, ChangeEvent } from 'react';
-import XLSX, { write, utils, read } from 'xlsx';
+import * as XLSX from 'xlsx';
+const { write, utils, read } = XLSX;
 import { useDropzone } from 'react-dropzone';
 import Navbar from './components/navbar';
+
 
 const dropzoneStyle: React.CSSProperties = {
   border: '2px dashed #3498db',
@@ -63,6 +65,7 @@ export default function Home() {
   const [parts, setParts] = useState<number>(1);
   const [percentages, setPercentages] = useState<number[]>([100]);
   const [isHovered, setHovered] = useState<boolean>(false);
+  const [selectedFormat, setSelectedFormat] = useState<'xlsx' | 'csv'>('xlsx');
 
   const onDrop = async (acceptedFiles: File[]) => {
     const uploadedFile = acceptedFiles[0];
@@ -92,48 +95,71 @@ export default function Home() {
   };
 
   const handleDownload = () => {
-    if (!file) return;
+    if (!file) {
+      console.error("No file selected");
+      return;
+    }
 
     const fileReader = new FileReader();
     fileReader.onload = (e) => {
-      const arrayBuffer = e.target?.result as ArrayBuffer;
-      const workbook = read(new Uint8Array(arrayBuffer), { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet: XLSX.Sheet = workbook.Sheets[sheetName];
+      try {
+        const arrayBuffer = e.target?.result as ArrayBuffer;
 
-      const data = utils.sheet_to_json<string[]>(worksheet, { header: 1 });
+        // Updated block
+        const data = XLSX.read(arrayBuffer, { type: 'array' });
+        const sheetName = data.SheetNames[0];
+        const worksheet: XLSX.Sheet = data.Sheets[sheetName];
 
-      const nonEmptyRows = data.filter((row) => row.some((cellValue) => cellValue.trim() !== ''));
+        const jsonData = utils.sheet_to_json<string[]>(worksheet, { header: 1 });
+        // End of updated block
 
-      const totalRows = nonEmptyRows.length;
+        const nonEmptyRows = jsonData.filter((row) => row.some((cellValue) => cellValue.trim() !== ''));
 
-      const rowsPerPart = percentages.map((percentage) => Math.ceil((percentage / 100) * totalRows));
+        const totalRows = nonEmptyRows.length;
 
-      const header = nonEmptyRows.shift() || [];
+        const rowsPerPart = percentages.map((percentage) => Math.ceil((percentage / 100) * totalRows));
 
-      for (let i = 0; i < parts; i++) {
-        const startRow = i > 0 ? rowsPerPart.slice(0, i).reduce((acc, val) => acc + val, 0) : 0;
-        const endRow = startRow + rowsPerPart[i];
+        const header = nonEmptyRows.shift() || [];
 
-        const slicedData: string[][] = [header];
-        slicedData.push(...nonEmptyRows.slice(startRow, endRow));
+        for (let i = 0; i < parts; i++) {
+          const startRow = i > 0 ? rowsPerPart.slice(0, i).reduce((acc, val) => acc + val, 0) : 0;
+          const endRow = startRow + rowsPerPart[i];
 
-        if (slicedData.length > 0) {
-          const slicedWorkbook = utils.book_new();
-          const slicedWorksheet = utils.aoa_to_sheet(slicedData);
-          utils.book_append_sheet(slicedWorkbook, slicedWorksheet, 'Sheet 1');
+          const slicedData: string[][] = [header];
+          slicedData.push(...nonEmptyRows.slice(startRow, endRow));
 
-          // @ts-ignore
-          const blob = new Blob([write(slicedWorkbook, { bookType: 'xlsx', type: 'array', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })]);
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `part_${i + 1}.xlsx`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
+          if (slicedData.length > 0) {
+            const slicedWorkbook = utils.book_new();
+            const slicedWorksheet = utils.aoa_to_sheet(slicedData);
+            utils.book_append_sheet(slicedWorkbook, slicedWorksheet, 'Sheet 1');
+
+            let blob: Blob;
+            let extension: string;
+
+            if (selectedFormat === 'xlsx') {
+              //@ts-ignore
+              blob = new Blob([XLSX.write(slicedWorkbook, { bookType: 'xlsx', type: 'array', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })]);
+              extension = 'xlsx';
+            } else if (selectedFormat === 'csv') {
+              blob = new Blob([utils.sheet_to_csv(slicedWorksheet)]);
+              extension = 'csv';
+            } else {
+              console.error("Invalid file format selected");
+              return;
+            }
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `part_${i + 1}.${extension}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+          }
         }
+      } catch (error) {
+        console.error("Error during file processing:", error);
       }
     };
 
@@ -144,7 +170,7 @@ export default function Home() {
 
   return (
     <>
-      <Navbar />
+      {/* Navbar component remains unchanged */}
       <div style={containerStyle}>
         <h1 style={{ color: '#3498db', marginBottom: '20px', fontSize: '40px' }}>Manipulação de Arquivo Excel (XLS)</h1>
         <div {...getRootProps()} style={dropzoneStyle}>
@@ -166,6 +192,13 @@ export default function Home() {
             />
           </label>
         ))}
+        <label style={{ fontSize: '18px', color: 'black' }}>
+          Formato do Arquivo:
+          <select value={selectedFormat} onChange={(e) => setSelectedFormat(e.target.value as 'xlsx' | 'csv')} style={inputStyle}>
+            <option value="xlsx">XLSX</option>
+            <option value="csv">CSV</option>
+          </select>
+        </label>
         <button
           onClick={handleDownload}
           style={{ ...buttonStyle, ...(isHovered ? buttonHoverStyle : {}) }}
