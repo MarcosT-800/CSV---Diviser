@@ -171,7 +171,7 @@ export default function Home() {
           <p style={{ fontSize: '18px', color: 'black' }}>Arraste e solte o arquivo Excel (XLS) aqui ou clique para fazer o upload.</p>
         </div>
         <label style={{ fontSize: '18px', color: 'black' }}>
-          Partes para o arquivo:
+          Partes para o seu arquivo:
           <input type="number" value={parts} onChange={handlePartsChange} style={inputStyle} />
         </label>
         {Array.from({ length: parts }, (_, i) => (
