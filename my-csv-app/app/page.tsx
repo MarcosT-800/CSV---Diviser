@@ -113,7 +113,7 @@ export default function Home() {
         const jsonData = utils.sheet_to_json<string[]>(worksheet, { header: 1 });
         // End of updated block
 
-        const nonEmptyRows = jsonData.filter((row) => row.some((cellValue) => cellValue.trim() !== ''));
+        const nonEmptyRows = jsonData.filter((row) => row.some((cellValue) => typeof cellValue === 'string' && cellValue.trim() !== ''));
 
         const totalRows = nonEmptyRows.length;
 
@@ -170,15 +170,15 @@ export default function Home() {
 
   return (
     <>
-      {/* Navbar component remains unchanged */}
+      <Navbar />
       <div style={containerStyle}>
-        <h1 style={{ color: '#3498db', marginBottom: '20px', fontSize: '40px' }}>Manipulação de Arquivo Excel (XLS)</h1>
+        <h1 style={{ color: '#3498db', marginBottom: '20px', fontSize: '30px' }}>Manipulação de Arquivo Excel (XLS)</h1>
         <div {...getRootProps()} style={dropzoneStyle}>
           <input {...getInputProps()} />
           <p style={{ fontSize: '18px', color: 'black' }}>Arraste e solte o arquivo Excel (XLS) aqui ou clique para fazer o upload.</p>
         </div>
         <label style={{ fontSize: '18px', color: 'black' }}>
-          Partes para o arquivo:
+          Partes para o seu arquivo:
           <input type="number" value={parts} onChange={handlePartsChange} style={inputStyle} />
         </label>
         {Array.from({ length: parts }, (_, i) => (
@@ -208,8 +208,15 @@ export default function Home() {
           Dividir e Baixar
         </button>
       </div>
-      <footer style={footerStyle}>
-        <p>Development By MarcosJr</p>
+      <footer style={{
+        backgroundColor: 'transparent',
+        color: '#fff',
+        padding: '10px',
+        textAlign: 'center',
+        bottom: '0',
+        width: '100%',
+      }}>
+        <p style={{ margin: '0' }}>Development ❤️ by MarcosJr</p>
       </footer>
     </>
   );
