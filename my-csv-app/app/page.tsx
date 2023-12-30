@@ -59,32 +59,25 @@ const footerStyle: React.CSSProperties = {
 };
 
 export default function Home() {
-  const [file, setFile] = useState<File | null>(null);
-  const [parts, setParts] = useState<number>(1);
-  const [percentages, setPercentages] = useState<number[]>([100]);
-  const [isHovered, setHovered] = useState<boolean>(false);
-  const [selectedFormat, setSelectedFormat] = useState<'xlsx' | 'csv'>('xlsx');
-
-  const handlePercentageChange = (index: number, value: number) => {
-    const updatedPercentages = [...percentages];
-    updatedPercentages[index] = value;
-    setPercentages(updatedPercentages);
-  };
-
-  const handlePercentageChange = (index: number, value: number) => {
-    const updatedPercentages = [...percentages];
-    updatedPercentages[index] = value;
-    const remainingPercentage = 100 - value;
-    const equalShare = Math.floor(remainingPercentage / (parts - 1));
-
-    for (let i = 0; i < parts; i++) {
-      if (i !== index) {
-        updatedPercentages[i] = equalShare;
-      }
-    }
-
-    setPercentages(updatedPercentages);
-  };
+    const [file, setFile] = useState<File | null>(null);
+    const [parts, setParts] = useState<number>(1);
+    const [percentages, setPercentages] = useState<number[]>([100]);
+    const [isHovered, setHovered] = useState<boolean>(false);
+    const [selectedFormat, setSelectedFormat] = useState<'xlsx' | 'csv'>('xlsx');
+  
+    // Adicione a função handlePartsChange
+    const handlePartsChange = (event: ChangeEvent<HTMLInputElement>) => {
+      const newParts = parseInt(event.target.value, 10);
+      setParts(newParts);
+      const defaultPercentage = Math.floor(100 / newParts);
+      setPercentages(new Array(newParts).fill(defaultPercentage));
+    };
+  
+    const handlePercentageChange = (index: number, value: number) => {
+      const updatedPercentages = [...percentages];
+      updatedPercentages[index] = value;
+      setPercentages(updatedPercentages);
+    };
 
   const handleDownload = () => {
     if (!file) return;
