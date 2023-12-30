@@ -65,11 +65,10 @@ export default function Home() {
   const [isHovered, setHovered] = useState<boolean>(false);
   const [selectedFormat, setSelectedFormat] = useState<'xlsx' | 'csv'>('xlsx');
 
-  const handlePartsChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const newParts = parseInt(event.target.value, 10);
-    setParts(newParts);
-    const defaultPercentage = Math.floor(100 / newParts);
-    setPercentages(new Array(newParts).fill(defaultPercentage));
+  const handlePercentageChange = (index: number, value: number) => {
+    const updatedPercentages = [...percentages];
+    updatedPercentages[index] = value;
+    setPercentages(updatedPercentages);
   };
 
   const handlePercentageChange = (index: number, value: number) => {
