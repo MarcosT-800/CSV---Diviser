@@ -157,7 +157,7 @@ export default function Home() {
     <>
     <Navbar />
       <div style={containerStyle}>
-        <h1 style={{ color: '#3498db', marginBottom: '20px', fontSize: '40px' }}>Manipulação de Arquivo Excel (XLS)</h1>
+        <h1 style={{ color: '#3498db', marginBottom: '20px', fontSize: '40px' }}>Manipulação de Arquivo Excel</h1>
         <div {...getRootProps()} style={dropzoneStyle}>
           <input {...getInputProps()} />
           <p style={{ fontSize: '18px', color: 'black' }}>Arraste e solte o arquivo Excel (XLS) aqui ou clique para fazer o upload.</p>
