@@ -9,7 +9,7 @@ const Navbar = () => {
 
   return (
     <nav className="w-full flex py-2 px-8 justify-between items-center navbar bg-trasnparent">
-      <img src='/logo (1) (1).png' alt="hoobank" className="w-[50px] h-[auto]" />
+      <img src='/logo ph tech preto.png' alt="hoobank" className="w-[60px] h-[auto]" />
 
       <ul className="list-none sm:flex hidden justify-end items-center flex-1">
         <li className="d-flex justify-between w-100">

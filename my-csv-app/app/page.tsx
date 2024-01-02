@@ -196,7 +196,7 @@ export default function Home() {
         </button>
       </div>
       <footer style={footerStyle}>
-        <p>Development By MarcosJr</p>
+        <p>Development By MarcosJr<span> Copyright © PH Negócios</span></p>
       </footer>
     </>
   );

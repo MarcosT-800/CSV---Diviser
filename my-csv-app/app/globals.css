@@ -70,3 +70,7 @@ input {
     input:focus {
       border-color: clr-primary;
     }
+
+    span {
+      font-weight: bold;
+    }
