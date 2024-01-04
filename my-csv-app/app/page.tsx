@@ -65,17 +65,17 @@ export default function Home() {
     const [isHovered, setHovered] = useState<boolean>(false);
     const [selectedFormat, setSelectedFormat] = useState<'xlsx' | 'csv'>('xlsx');
   
-    // Adicione a função handlePartsChange
     const handlePartsChange = (event: ChangeEvent<HTMLInputElement>) => {
-      const newParts = parseInt(event.target.value, 10);
+      const newParts = parseInt(event.target.value, 10) || 1;
       setParts(newParts);
       const defaultPercentage = Math.floor(100 / newParts);
       setPercentages(new Array(newParts).fill(defaultPercentage));
     };
   
     const handlePercentageChange = (index: number, value: number) => {
+      const validatedValue = isNaN(value) ? 0 : Math.max(0, Math.min(value, 100));
       const updatedPercentages = [...percentages];
-      updatedPercentages[index] = value;
+      updatedPercentages[index] = validatedValue;
       setPercentages(updatedPercentages);
     };
 
@@ -105,10 +105,9 @@ export default function Home() {
           const startRow = i > 0 ? rowsPerPart.slice(0, i).reduce((acc, val) => acc + val, 0) : 0;
           const endRow = startRow + rowsPerPart[i];
 
-          const slicedData: string[][] = [header];
-          slicedData.push(...nonEmptyRows.slice(startRow, endRow));
+          const slicedData: string[][] = [header, ...nonEmptyRows.slice(startRow, endRow).filter(row => row.some(cellValue => typeof cellValue === 'string' && cellValue.trim() !== ''))];
 
-          if (slicedData.length > 0) {
+          if (slicedData.length > 1) {
             const slicedWorkbook = XLSX.utils.book_new();
             const slicedWorksheet = XLSX.utils.aoa_to_sheet(slicedData);
             XLSX.utils.book_append_sheet(slicedWorkbook, slicedWorksheet, 'Sheet 1');
